@@ -10,6 +10,15 @@ import jwt from "jsonwebtoken";
 
 import "dotenv/config";
 
+import fs from "fs/promises";
+
+import path from "path";
+
+import gravatar from "gravatar";
+
+import Jimp from "jimp";
+
+
 const { JWT_SECRET } = process.env;
 
 const signup = async (req, res, next) => {
@@ -19,6 +28,7 @@ const signup = async (req, res, next) => {
   }
 
   const { email, password } = req.body;
+  const avatarURL = gravatar.url(email, { s: '200' });
   const user = await User.findOne({ email });
   if (user) {
     return next(HttpError(409, "Email in use"));
@@ -87,9 +97,29 @@ const logout = async (req, res) => {
   });
 };
 
+const updateAvatar = async (req, res) => {
+
+  const { path: oldPath, filename } = req.file;
+  const avatarPath = path.resolve("public", "avatars");
+  const newPath = path.join(avatarPath, filename);
+  const avatarURL = path.join("avatars", filename);
+  const tempPath = path.join("temp", filename);
+  const image = await Jimp.read(tempPath);
+  image.resize(250, 250);
+  image.write(tempPath);
+
+  await fs.rename(oldPath, newPath);
+ 
+  const { _id} = req.user;
+  await User.findByIdAndUpdate(_id, { avatarURL: avatarURL }, { new: true });
+  
+  res.json({avatarURL: avatarURL});
+}
+
 export default {
     signup,
     signin,
     getCurrent,
-    logout
+    logout,
+    updateAvatar
 };
