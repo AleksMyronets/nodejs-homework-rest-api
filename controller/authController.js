@@ -99,6 +99,11 @@ const logout = async (req, res) => {
 };
 
 const updateAvatar = async (req, res) => {   
+  const { file } = req;
+    if (!file) {
+        res.status(400).json({message: "Missing files"});
+        return
+    }
   const { path: oldPath, filename } = req.file;
   const avatarPath = path.resolve("public", "avatars");
   const newPath = path.join(avatarPath, filename);
