@@ -18,11 +18,11 @@ app.use(cors());
 
 app.use(express.json());
 
-app.use(express.static("public"));
-
 app.use('/api/contacts', router);
 
 app.use('/users', authRouter);
+
+app.use(express.static("public"));
 
 
 app.use((req, res) => {
