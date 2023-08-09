@@ -98,23 +98,19 @@ const logout = async (req, res) => {
   });
 };
 
-const updateAvatar = async (req, res) => {
-
+const updateAvatar = async (req, res) => {   
   const { path: oldPath, filename } = req.file;
   const avatarPath = path.resolve("public", "avatars");
   const newPath = path.join(avatarPath, filename);
+  await fs.rename(oldPath, newPath);
   const avatarURL = path.join("avatars", filename);
-  const tmpPath = path.join("tmp", filename);
+  const tmpPath = path.join("tmp", filename)
   const image = await Jimp.read(tmpPath);
   image.resize(250, 250);
-  image.write(tmpPath);
-
-  await fs.rename(oldPath, newPath);
- 
-  const { _id} = req.user;
+  image.write(tmpPath)
+  const { _id } = req.user;
   await User.findByIdAndUpdate(_id, { avatarURL: avatarURL }, { new: true });
-  
-  res.json({avatarURL: avatarURL});
+  res.json(avatarURL);
 }
 
 export default {
