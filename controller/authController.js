@@ -36,10 +36,11 @@ const signup = async (req, res, next) => {
 
   const hashPassword = await bcryptjs.hash(password, 10);
 
-  const newUser = await User.create({ ...req.body, password: hashPassword });
+  const newUser = await User.create({ ...req.body, password: hashPassword, avatarURL });
 
   res.status(201).json({
     user: {
+      avatarURL: newUser.avatarURL,
       email: newUser.email,
       subscription: newUser.subscription,
     },
