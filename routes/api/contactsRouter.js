@@ -16,7 +16,7 @@ router.get("/", contactController.getAll );
 
 router.get("/:id", isValidId,  contactController.getById);
 
-router.post("/", upload.single("poster"), contactController.add);
+router.post("/", contactController.add);
 
 router.delete("/:id", isValidId, contactController.deleteById);
 
