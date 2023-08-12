@@ -6,6 +6,7 @@ import isValidId from "../../middlewars/isValidld.js";
 
 import authenticate from '../../middlewars/authenticate.js';
 
+import upload from "../../middlewars/upload.js";
 
 const router = express.Router();
 
