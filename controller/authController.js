@@ -56,18 +56,6 @@ const signup = async (req, res, next) => {
   });
 };
 
-const verify = async (req, res, next) => {
-  const { verificationToken } = req.params;
-  const user = await User.findOne({ verificationToken });
-  if (!user) {
-     return next(HttpError(404, "User not found"));
-  }
-  await User.findByIdAndUpdate(user._id, { verify: true, verificationToken: "" });
-
-  res.json({
-      message: "Verify successful"
-  })
-};
 
 const signin = async (req, res, next) => {
   const { error } = userShemas.userSigninShema.validate(req.body);
@@ -108,6 +96,19 @@ const signin = async (req, res, next) => {
   });
 };
 
+const verify = async (req, res, next) => {
+  const { verificationToken } = req.params;
+  const user = await User.findOne({ verificationToken });
+  if (!user) {
+     return next(HttpError(404, "User not found"));
+  }
+  await User.findByIdAndUpdate(user._id, { verify: true, verificationToken: "" });
+
+  res.json({
+      message: "Verify successful"
+  })
+};
+
 const resendVerifyEmail = async (req, res, next) => {
 
   const { error } = userShemas.userEmailShema.validate(req.body);
@@ -126,7 +127,7 @@ const resendVerifyEmail = async (req, res, next) => {
     return next(HttpError(400, "Verification has already been passed"))
   }
 
-  const verifyEmail = createVerifyEmail({email, verificationToken: user.verificationToken});
+  const verifyEmail = createVerifyEmail({ email, verificationToken: user.verificationToken });
 
   await sendEmail(verifyEmail);
 
