@@ -24,8 +24,8 @@ const userSigninShema = joi.object({
 })
 
 const userEmailShema = joi.object({
-    email: joi.string()
-        .pattern(emailRegexp).
+    email: joi.string().
+        pattern(emailRegexp).
         required(),
 
 })
