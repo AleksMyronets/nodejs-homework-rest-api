@@ -39,7 +39,7 @@ const signup = async (req, res, next) => {
 
   const hashPassword = await bcryptjs.hash(password, 10);
 
-  const varificationToken = nanoid();
+  const verificationToken = nanoid();
 
   const newUser = await User.create({ ...req.body, password: hashPassword, avatarURL, verificationToken });
 
