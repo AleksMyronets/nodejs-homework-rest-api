@@ -41,13 +41,9 @@ const signup = async (req, res, next) => {
 
   const varificationToken = nanoid();
 
-  const newUser = await User.create({ ...req.body, password: hashPassword, avatarURL, varificationToken });
+  const newUser = await User.create({ ...req.body, password: hashPassword, avatarURL, verificationToken });
 
-  const verifyEmail = {
-    to: email,
-    subject: "Verify email",
-    html: `<a href="${BASE_URL}/users/auth/verify/${varificationToken}" target="_blank">Click verify email</a>`,
-  }
+  const verifyEmail = createVerifyEmail({email, verificationToken});
 
   await sendEmail(verifyEmail);
 
@@ -114,7 +110,7 @@ const signin = async (req, res, next) => {
 
 const resendVerifyEmail = async (req, res, next) => {
 
-  const { error } = userSchemas.userEmailSchema.validate(req.body);
+  const { error } = userShemas.userEmailShema.validate(req.body);
   if (error) {
     return next(HttpError(400, error.message));
   }
@@ -130,7 +126,7 @@ const resendVerifyEmail = async (req, res, next) => {
     return next(HttpError(400, "Verification has already been passed"))
   }
 
-  const verifyEmail = createVerifyEmail({ email, verificationToken: user.verificationToken });
+  const verifyEmail = createVerifyEmail({email, verificationToken: user.verificationToken});
 
   await sendEmail(verifyEmail);
 
