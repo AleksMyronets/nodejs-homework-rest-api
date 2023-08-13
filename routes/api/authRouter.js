@@ -10,7 +10,7 @@ const authRouter = express.Router();
 
 authRouter.post('/register', authController.signup);
 
-authRouter.get("/verify/verificationToken", authController.verify);
+authRouter.get("/verify/:verificationToken", authController.verify);
 
 authRouter.post("/verify", authController.resendVerifyEmail);
 
