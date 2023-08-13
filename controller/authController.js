@@ -25,7 +25,7 @@ import Jimp from "jimp";
 import { nanoid } from 'nanoid';
 
 
-const { JWT_SECRET } = process.env;
+const { JWT_SECRET, BASE_URL } = process.env;
 
 const signup = async (req, res, next) => {
   const { error } = userShemas.userSignupShema.validate(req.body);
