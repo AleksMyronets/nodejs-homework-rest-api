@@ -4,6 +4,8 @@ import HttpError from '../helpers/HttpError.js';
 
 import userShemas from '../helpers/user-shemas.js';
 
+import sendEmail from '../helpers/sendEmail.js';
+
 import bcryptjs from "bcryptjs";
 
 import jwt from "jsonwebtoken";
@@ -18,8 +20,10 @@ import gravatar from "gravatar";
 
 import Jimp from "jimp";
 
+import { nanoid } from 'nanoid';
 
-const { JWT_SECRET } = process.env;
+
+const { JWT_SECRET, BASE_URL } = process.env;
 
 const signup = async (req, res, next) => {
   const { error } = userShemas.userSignupShema.validate(req.body);
@@ -36,7 +40,17 @@ const signup = async (req, res, next) => {
 
   const hashPassword = await bcryptjs.hash(password, 10);
 
-  const newUser = await User.create({ ...req.body, password: hashPassword, avatarURL });
+  const varificationToken = nanoid();
+
+  const newUser = await User.create({ ...req.body, password: hashPassword, avatarURL, varificationToken });
+
+  const verifyEmail = {
+    to: email,
+    subject: "Verify email",
+    html: `<a href="${BASE_URL}/users/auth/verify/${varificationToken}" target="_blank">Click verify email</a>`,
+  }
+
+  await sendEmail(verifyEmail);
 
   res.status(201).json({
     user: {
@@ -45,6 +59,19 @@ const signup = async (req, res, next) => {
       subscription: newUser.subscription,
     },
   });
+};
+
+const verify = async (req, res, next) => {
+  const { verificationToken } = req.params;
+  const user = await User.findOne({ verificationToken });
+  if (!user) {
+     return next(HttpError(404, "User not found"));
+  }
+  await User.findByIdAndUpdate(user._id, { verify: true, verificationToken: "" });
+
+  res.json({
+      message: "Verify successful"
+  })
 };
 
 const signin = async (req, res, next) => {
@@ -57,6 +84,10 @@ const signin = async (req, res, next) => {
   const user = await User.findOne({ email });
   if (!user) {
     return next(HttpError(401, "Email or password is wrong"));
+  }
+
+  if (!user.verify) {
+    return next(HttpError(401, "Email not verify"));
   }
 
   const passwordCompare = await bcryptjs.compare(password, user.password);
@@ -82,6 +113,33 @@ const signin = async (req, res, next) => {
   });
 };
 
+const resendVerifyEmail = async (req, res, next) => {
+
+  const { error } = userSchemas.userEmailSchema.validate(req.body);
+  if (error) {
+    return next(HttpError(400, error.message));
+  }
+
+  const { email } = req.body;
+
+  const user = await User.findOne({ email });
+  if (!user) {
+    return next(HttpError(404, "Email not found"));
+  }
+
+  if (user.verify) {
+    return next(HttpError(400, "Verification has already been passed"))
+  }
+
+  const verifyEmail = createVerifyEmail({ email, verificationToken: user.verificationToken });
+
+  await sendEmail(verifyEmail);
+
+  res.json({
+    message: "Verification email sent"
+  })
+};
+
 const getCurrent = (req, res) => {
   const { subscription, email } = req.user;
   res.json({
@@ -97,26 +155,6 @@ const logout = async (req, res) => {
     message: "Logout success",
   });
 };
-
-// const updateAvatar = async (req, res) => {
-//   const { file } = req;
-//     if (!file) {
-//         res.status(400).json({message: "Missing files"});
-//         return
-//     }
-//   const { path: oldPath, filename } = req.file;
-//   const avatarPath = path.resolve("public", "avatars");
-//   const newPath = path.join(avatarPath, filename);
-//   const avatarURL = path.join("public", "avatars", filename);
-//   const tmpPath = path.join("tmp", filename)
-//   await fs.rename(oldPath, newPath);
-//   image.resize(250, 250);
-//   image.write(tmpPath);
-//   const image = await Jimp.read(tmpPath);
-//   const { _id } = req.user;
-//   await User.findByIdAndUpdate(_id, { avatarURL: avatarURL }, { new: true });
-//   res.json(avatarURL);
-// }
 
 const updateAvatar = async (req, res) => { 
     const { file } = req;
@@ -144,6 +182,8 @@ const updateAvatar = async (req, res) => {
 export default {
     signup,
     signin,
+    verify,
+    resendVerifyEmail,
     getCurrent,
     logout,
     updateAvatar
