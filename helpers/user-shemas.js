@@ -23,8 +23,17 @@ const userSigninShema = joi.object({
         .messages({ "any.required": 'missed required password field' }),
 })
 
+const userEmailShema = joi.object({
+    email: joi.string().
+        pattern(emailRegexp).
+        required(),
+
+})
+
+
 export default {
     userSignupShema,
-    userSigninShema
+    userSigninShema,
+    userEmailShema
 }
 
